@@ -138,10 +138,10 @@ tasks {
     group = "npm-dependencies"
     description = "Installs peer dependencies as dev dependencies"
 
-    val devDependencies = packageJson.pkg.peerDependencies
+    val peerDependencies = packageJson.pkg.peerDependencies
       .map { (dependency, version) -> "$dependency@$version" }
 
-    setArgs(listOf("install", "--save-dev", *devDependencies.toTypedArray()))
+    setArgs(listOf("install", "--save-dev", *peerDependencies.toTypedArray()))
   }
 
   create("npmPackage") {
