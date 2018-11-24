@@ -17,22 +17,14 @@ import com.moowork.gradle.node.npm.NpmInstallTask
 import com.moowork.gradle.node.npm.NpmTask
 import com.moowork.gradle.node.task.NodeTask
 import me.kgustave.gradle.pkg.json.plugin.PkgJsonTask
-import org.gradle.plugins.ide.idea.model.Module
-import org.gradle.plugins.ide.idea.model.Path
-import org.jetbrains.gradle.ext.ModuleSettings
-import org.jetbrains.kotlin.gradle.tasks.Kotlin2JsCompile
-import org.jetbrains.kotlin.gradle.tasks.KotlinJsDce
 
 plugins {
-  id("idea")
   id("com.moowork.node") version "1.2.0"
   id("me.kgustave.pkg.json") version "1.0.0"
-  id("org.jetbrains.gradle.plugin.idea-ext")
 }
 
 node {
   download = false
-  npmWorkDir = file("build/npm")
   nodeModulesDir = file("node_modules")
 }
 
@@ -40,8 +32,6 @@ fun Map<String, String>.dependencyArray(): Array<String> =
   map { (dependency, version) -> "$dependency@$version" }.toTypedArray()
 
 tasks {
-  // npm installation
-
   val packageJson by named<PkgJsonTask>("packageJson") {
     group = "node"
     pkg {
@@ -91,19 +81,11 @@ tasks {
     installDevDependencies.mustRunAfter(installDependencies)
   }
 
-  // test configuration
-
-  val runMocha by register<NodeTask>("runMocha") {
+  create<NodeTask>("runMocha") {
     group = "npm-scripts"
     description = "Tests with mocha"
 
     setScript(file("node_modules/mocha/bin/mocha"))
     setArgs(listOf(file("test/tests.js")))
-  }
-
-  create<Test>("test") {
-    group = "testing"
-    description = "Runs tests"
-    dependsOn(runMocha)
   }
 }
