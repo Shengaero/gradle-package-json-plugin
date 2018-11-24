@@ -118,30 +118,24 @@ tasks {
     group = "npm-dependencies"
     description = "Installs dependencies"
 
-    val dependencies = packageJson.pkg.dependencies
-      .map { (dependency, version) -> "$dependency@$version" }
-
-    setArgs(listOf("install", "--save", *dependencies.toTypedArray()))
+    setArgs(listOf("install", "--save",
+      *packageJson.pkg.dependencies.dependencyArray()))
   }
 
   val installDevDependencies by register<NpmTask>("installDevDependencies") {
     group = "npm-dependencies"
     description = "Installs dev dependencies"
 
-    val devDependencies = packageJson.pkg.devDependencies
-      .map { (dependency, version) -> "$dependency@$version" }
-
-    setArgs(listOf("install", "--save-dev", *devDependencies.toTypedArray()))
+    setArgs(listOf("install", "--save-dev",
+      *packageJson.pkg.devDependencies.dependencyArray()))
   }
 
   val installPeerDependencies by register<NpmTask>("installPeerDependencies") {
     group = "npm-dependencies"
     description = "Installs peer dependencies as dev dependencies"
 
-    val peerDependencies = packageJson.pkg.peerDependencies
-      .map { (dependency, version) -> "$dependency@$version" }
-
-    setArgs(listOf("install", "--save-dev", *peerDependencies.toTypedArray()))
+    setArgs(listOf("install", "--save-dev",
+      *packageJson.pkg.peerDependencies.dependencyArray()))
   }
 
   create("npmPackage") {
@@ -181,3 +175,6 @@ tasks {
     mustRunAfter("clean")
   }
 }
+
+fun Map<String, String>.dependencyArray(): Array<String> =
+  map { (dependency, version) -> "$dependency@$version" }.toTypedArray()
