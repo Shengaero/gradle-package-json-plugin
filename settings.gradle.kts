@@ -37,8 +37,10 @@ pluginManagement {
 
 rootProject.name = "gradle-package-json-plugin"
 
-include(":simple-build")
-project(":simple-build").projectDir = file("samples/simple-build")
+fun sample(name: String) {
+  include(":$name")
+  project(":$name").projectDir = file("samples/$name")
+}
 
-include(":kotlin-js-bindings")
-project(":kotlin-js-bindings").projectDir = file("samples/kotlin-js-bindings")
+sample("js-library")
+sample("kotlin-js-bindings")

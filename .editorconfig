@@ -16,13 +16,13 @@ trim_trailing_whitespace = false
 insert_final_newline = false
 end_of_line = lf
 
-[**.{java, kt, kts, gradle}]
+[**.{java, kt, kts, gradle, js}]
 trim_trailing_whitespace = true
 insert_final_newline = true
 end_of_line = lf
 indent_size = 4
 
-[**.gradle.kts]
+[**.{gradle.kts, js}]
 indent_size = 2
 
 [*.md]

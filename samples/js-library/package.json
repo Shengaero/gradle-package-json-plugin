@@ -1,0 +1,21 @@
+{
+  "name": "kotlin-like",
+  "version": "1.0.0",
+  "description": "Kotlin functions, but it's actually javascript!",
+  "private": true,
+  "main": "src/kotlin-like.js",
+  "author": {
+    "name": "Kaidan Gustave",
+    "email": "kaidangustave@yahoo.com",
+    "url": "kgustave@yahoo.com"
+  },
+  "tags": [
+    "not-kotlin",
+    "notlin"
+  ],
+  "license": "Apache-2.0",
+  "devDependencies": {
+    "chai": "^4.2.0",
+    "mocha": "^5.2.0"
+  }
+}
