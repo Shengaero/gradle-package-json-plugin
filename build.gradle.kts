@@ -72,13 +72,6 @@ dependencies {
   testRuntime("org.junit.jupiter:junit-jupiter-engine:$jupiterVersion")
 }
 
-sourceSets {
-  all {
-    java.srcDir("$name/java")
-    resources.srcDir("$name/resources")
-  }
-}
-
 java {
   sourceCompatibility = JavaVersion.VERSION_1_8
 }
@@ -86,9 +79,6 @@ java {
 kotlin {
   sourceSets {
     all {
-      kotlin.srcDir("$name/kotlin")
-      resources.srcDir("$name/resources")
-
       with(languageSettings) {
         useExperimentalAnnotation("kotlin.Experimental")
         useExperimentalAnnotation("kotlinx.serialization.ImplicitReflectionSerializer")
