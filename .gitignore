@@ -1,0 +1,15 @@
+### Gradle ###
+.gradle/
+build/
+
+### NPM ###
+node_modules/
+
+### IDE Configurations ###
+.idea/
+*.ipr
+*.iml
+*.iws
+
+### Publish Tokens and Keys ###
+gradle/bintray.properties
