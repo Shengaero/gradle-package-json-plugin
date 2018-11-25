@@ -17,6 +17,7 @@ package me.kgustave.gradle.pkg.json.internal
 
 import kotlinx.serialization.*
 import me.kgustave.gradle.pkg.json.data.PkgJson
+import me.kgustave.gradle.pkg.json.data.Repository
 
 @Serializer(forClass = PkgJson::class)
 internal object PkgJsonSerializer {
@@ -24,6 +25,7 @@ internal object PkgJsonSerializer {
     private val StringStringMapSerializer = (String.serializer() to String.serializer()).map
 
     override fun serialize(output: Encoder, obj: PkgJson) {
+        // begin
         val out = output.beginStructure(descriptor)
 
         // name
@@ -32,16 +34,17 @@ internal object PkgJsonSerializer {
         // version
         out.encodeStringElement(descriptor, descriptor.getElementIndex("version"), obj.version)
 
-        // description
-        if(!obj.description.isNullOrBlank()) {
-            out.encodeStringElement(descriptor, descriptor.getElementIndex("description"), obj.description)
-        }
-
         // private
         if(obj.private) {
             out.encodeBooleanElement(descriptor, descriptor.getElementIndex("private"), true)
         }
 
+        // description
+        if(!obj.description.isNullOrBlank()) {
+            out.encodeStringElement(descriptor, descriptor.getElementIndex("description"), obj.description)
+        }
+
+        // main
         if(obj.main != null) {
             out.encodeStringElement(descriptor, descriptor.getElementIndex("main"), obj.main)
         }
@@ -53,6 +56,16 @@ internal object PkgJsonSerializer {
                 index = descriptor.getElementIndex("author"),
                 saver = PersonSerializer,
                 value = obj.author
+            )
+        }
+
+        // contributors
+        if(obj.contributors.isNotEmpty()) {
+            out.encodeSerializableElement(
+                desc = descriptor,
+                index = descriptor.getElementIndex("contributors"),
+                saver = PersonSerializer.list,
+                value = obj.contributors
             )
         }
 
@@ -82,6 +95,26 @@ internal object PkgJsonSerializer {
             )
         }
 
+        // scripts
+        if(obj.scripts.isNotEmpty()) {
+            out.encodeSerializableElement(
+                desc = descriptor,
+                index = descriptor.getElementIndex("scripts"),
+                saver = StringStringMapSerializer,
+                value = obj.scripts
+            )
+        }
+
+        // repository
+        if(obj.repository != null) {
+            out.encodeSerializableElement(
+                desc = descriptor,
+                index = descriptor.getElementIndex("repository"),
+                saver = Repository.serializer(),
+                value = obj.repository
+            )
+        }
+
         // dependencies
         if(obj.dependencies.isNotEmpty()) {
             out.encodeSerializableElement(
@@ -102,15 +135,17 @@ internal object PkgJsonSerializer {
             )
         }
 
+        // peerDependencies
         if(obj.peerDependencies.isNotEmpty()) {
             out.encodeSerializableElement(
                 desc = descriptor,
                 index = descriptor.getElementIndex("peerDependencies"),
                 saver = StringStringMapSerializer,
-                value = obj.devDependencies
+                value = obj.peerDependencies
             )
         }
 
+        // end
         out.endStructure(descriptor)
     }
 }

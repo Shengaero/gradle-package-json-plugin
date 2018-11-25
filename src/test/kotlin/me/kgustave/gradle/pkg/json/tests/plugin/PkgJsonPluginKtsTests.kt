@@ -49,7 +49,7 @@ class PkgJsonPluginKtsTests: AbstractProjectTests(buildScriptName = "build.gradl
 
     @Test fun `test plugin task succeeds (kts)`() {
         gradleBuildScript("""
-            import PkgJsonTask
+            import me.kgustave.gradle.pkg.json.plugin.PkgJsonTask
 
             plugins {
                 id("${PkgJsonPlugin.ID}")
@@ -75,7 +75,7 @@ class PkgJsonPluginKtsTests: AbstractProjectTests(buildScriptName = "build.gradl
 
     @Test fun `test plugin task creates file (kts)`() {
         gradleBuildScript("""
-            import PkgJsonTask
+            import me.kgustave.gradle.pkg.json.plugin.PkgJsonTask
 
             plugins {
                 id("${PkgJsonPlugin.ID}")
@@ -100,7 +100,7 @@ class PkgJsonPluginKtsTests: AbstractProjectTests(buildScriptName = "build.gradl
 
     @Test fun `test plugin task writes to file (kts)`() {
         gradleBuildScript("""
-            import PkgJsonTask
+            import me.kgustave.gradle.pkg.json.plugin.PkgJsonTask
 
             plugins {
                 id("${PkgJsonPlugin.ID}")
@@ -127,7 +127,7 @@ class PkgJsonPluginKtsTests: AbstractProjectTests(buildScriptName = "build.gradl
 
     @Test fun `test plugin task adds dependencies to file (kts)`() {
         gradleBuildScript("""
-            import PkgJsonTask
+            import me.kgustave.gradle.pkg.json.plugin.PkgJsonTask
 
             plugins {
                 id("${PkgJsonPlugin.ID}")
@@ -155,7 +155,7 @@ class PkgJsonPluginKtsTests: AbstractProjectTests(buildScriptName = "build.gradl
 
     @Test fun `test plugin task adds devDependencies to file (kts)`() {
         gradleBuildScript("""
-            import PkgJsonTask
+            import me.kgustave.gradle.pkg.json.plugin.PkgJsonTask
 
             plugins {
                 id("${PkgJsonPlugin.ID}")

@@ -16,15 +16,14 @@
 @file:Suppress("RemoveEmptyPrimaryConstructor", "unused")
 package me.kgustave.gradle.pkg.json.plugin.conventions
 
-import me.kgustave.gradle.pkg.json.internal.Open
 import org.gradle.api.Incubating
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.Optional
+import javax.inject.Inject
 
-@Open
 @Incubating
-class PkgJsonCacheConvention constructor() {
+open class PkgJsonCacheConvention @Inject constructor() {
     /**
      * Directory in which package.json outputs are cached.
      *

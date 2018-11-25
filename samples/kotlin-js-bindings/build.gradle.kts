@@ -85,6 +85,9 @@ tasks {
 
   val packageJson by named<PkgJsonTask>("packageJson") {
     group = "node"
+
+    val relativeBuildDir = buildDir.toRelativeString(projectDir).replace(File.separatorChar, '/')
+
     pkg {
       name = "birb-kt"
       version = "1.2.1"
@@ -92,10 +95,12 @@ tasks {
       description = "Kotlin bindings for the birb npm package"
       tags = listOf("kotlin2js", "birb")
       license = "Apache-2.0"
-      main = file("$buildDir/kotlin-js-min/main/birb-kt.js")
-        .toRelativeString(projectDir)
-        .replace(File.separatorChar, '/')
+      main = "$relativeBuildDir/kotlin-js-min/main/birb-kt.js"
 
+      scripts = mapOf(
+        "test" to "mocha $relativeBuildDir/kotlin-js-min/test/birb-kt_test.js"
+      )
+      
       author {
         name = "Kaidan Gustave"
         email = "kaidangustave@yahoo.com"

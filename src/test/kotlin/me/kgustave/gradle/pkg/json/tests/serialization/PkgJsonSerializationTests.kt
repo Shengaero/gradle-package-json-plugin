@@ -16,7 +16,9 @@
 package me.kgustave.gradle.pkg.json.tests.serialization
 
 import kotlinx.serialization.json.JSON
+import me.kgustave.gradle.pkg.json.data.Person
 import me.kgustave.gradle.pkg.json.data.PkgJson
+import me.kgustave.gradle.pkg.json.data.Repository
 import me.kgustave.gradle.pkg.json.internal.PkgJsonSerializer
 import me.kgustave.gradle.pkg.json.utils.SerializationTests
 import org.junit.jupiter.api.MethodOrderer
@@ -37,6 +39,13 @@ class PkgJsonSerializationTests {
         )
     }
 
+    @Test fun `test serialize package json private`() {
+        assertEquals(
+            expected = """{"name":"test-project","version":"1.0","private":true}""",
+            actual = JSON.stringify(PkgJsonSerializer, testPkgJson.copy(private = true))
+        )
+    }
+
     @Test fun `test serialize package json description`() {
         assertEquals(
             expected = """{"name":"test-project","version":"1.0","description":"A test package."}""",
@@ -46,10 +55,41 @@ class PkgJsonSerializationTests {
         )
     }
 
-    @Test fun `test serialize package json private`() {
+    @Test fun `test serialize package json main`() {
         assertEquals(
-            expected = """{"name":"test-project","version":"1.0","private":true}""",
-            actual = JSON.stringify(PkgJsonSerializer, testPkgJson.copy(private = true))
+            expected = """{"name":"test-project","version":"1.0","main":"index.js"}""",
+            actual = JSON.stringify(PkgJsonSerializer, testPkgJson.copy(
+                main = "index.js"
+            ))
+        )
+    }
+
+    @Test fun `test serialize package json author`() {
+        assertEquals(
+            expected = """{"name":"test-project","version":"1.0",""" +
+                """"author":{"name":"John Smith","email":"john@jsmith.me","url":"https://jsmith.me/"}}""",
+            actual = JSON.stringify(PkgJsonSerializer, testPkgJson.copy(
+                author = Person(
+                    name = "John Smith",
+                    email = "john@jsmith.me",
+                    url = "https://jsmith.me/")
+            ))
+        )
+    }
+
+    @Test fun `test serialize package json author (as string)`() {
+        assertEquals(
+            expected = """
+                {"name":"test-project","version":"1.0","author":"John Smith <john@jsmith.me> (https://jsmith.me/)"}
+            """.trimIndent(),
+            actual = JSON.stringify(PkgJsonSerializer, testPkgJson.copy(
+                author = Person(
+                    name = "John Smith",
+                    email = "john@jsmith.me",
+                    url = "https://jsmith.me/",
+                    asString = true
+                )
+            ))
         )
     }
 
@@ -89,6 +129,19 @@ class PkgJsonSerializationTests {
         )
     }
 
+    @Test fun `test serialize package json repository`() {
+        assertEquals(
+            expected = """{"name":"test-project","version":"1.0","repository":""" +
+                """{"type":"git","url":"https://github.com/Shengaero/gradle-package-json-plugin.git"}}""",
+            actual = JSON.stringify(PkgJsonSerializer, testPkgJson.copy(
+                repository = Repository(
+                    type = "git",
+                    url = "https://github.com/Shengaero/gradle-package-json-plugin.git"
+                )
+            ))
+        )
+    }
+
     @Test fun `test serialize package json dependencies`() {
         assertEquals(
             expected = """{"name":"test-project","version":"1.0","dependencies":{"chalk":"2.4.1"}}""",
@@ -106,6 +159,17 @@ class PkgJsonSerializationTests {
             actual = JSON.stringify(PkgJsonSerializer, testPkgJson.copy(
                 devDependencies = mapOf(
                     "mocha" to "5.2.0"
+                )
+            ))
+        )
+    }
+
+    @Test fun `test serialize package json peerDependencies`() {
+        assertEquals(
+            expected = """{"name":"test-project","version":"1.0","peerDependencies":{"kotlin":"1.3.10"}}""",
+            actual = JSON.stringify(PkgJsonSerializer, testPkgJson.copy(
+                peerDependencies = mapOf(
+                    "kotlin" to "1.3.10"
                 )
             ))
         )

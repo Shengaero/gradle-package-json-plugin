@@ -13,39 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-@file:Suppress("RemoveEmptyPrimaryConstructor")
 package me.kgustave.gradle.pkg.json.plugin
 
 import com.google.auto.service.AutoService
-import kotlinx.serialization.json.JSON
-import kotlinx.serialization.json.toBooleanStrictOrNull
-import me.kgustave.gradle.pkg.json.internal.Open
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.tasks.Internal
+import org.gradle.kotlin.dsl.task
 
 /**
  * The base class for the `gradle-package-json-plugin`.
  */
-@Open
-@Suppress("unused")
 @AutoService(Plugin::class)
-class PkgJsonPlugin(): Plugin<Project> {
-    private val json = JSON(
-        indent = System.getProperty("package.json.indent") ?: "  ",
-        indented = System.getProperty("package.json.indented")?.toBooleanStrictOrNull() ?: true,
-        strictMode = true,
-        encodeDefaults = false
-    )
+class PkgJsonPlugin: Plugin<Project> {
+    override fun apply(target: Project) = with(target) {
+        val pkgJsonTask = task<PkgJsonTask>(PkgJsonTask.DEFAULT_NAME)
 
-    private lateinit var pkgJsonTask: PkgJsonTask
-
-    override fun apply(target: Project) {
-        @Suppress("UnstableApiUsage")
-        this.pkgJsonTask =
-            target.tasks.create(PkgJsonTask.DEFAULT_NAME, PkgJsonTask::class.java, json)
-
-        target.afterEvaluate {
+        afterEvaluate {
             if(pkgJsonTask.autoUpdateFile) {
                 pkgJsonTask.generate()
             }

@@ -13,7 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package me.kgustave.gradle.pkg.json.internal
+package me.kgustave.gradle.pkg.json.plugin.conventions
 
-@Retention(AnnotationRetention.SOURCE)
-internal annotation class Open
+import kotlinx.serialization.json.JSON
+import org.gradle.api.tasks.Internal
+
+open class PkgJsonFormattingConvention {
+    var indent: String? = "  "
+
+    @Internal internal fun createJsonHandler(): JSON {
+        return JSON(indented = indent != null, indent = indent ?: " ")
+    }
+
+    internal companion object {
+        @Internal internal const val NAME = "formatting"
+    }
+}

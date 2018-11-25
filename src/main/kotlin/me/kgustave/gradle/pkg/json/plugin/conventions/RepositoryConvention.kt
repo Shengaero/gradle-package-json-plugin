@@ -13,20 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package me.kgustave.gradle.pkg.json.data
+package me.kgustave.gradle.pkg.json.plugin.conventions
 
-import kotlinx.serialization.Optional
-import kotlinx.serialization.Serializable
-import me.kgustave.gradle.pkg.json.internal.PersonSerializer
+import org.gradle.api.tasks.Internal
 
-@Serializable(with = PersonSerializer::class)
-data class Person(
-    val name: String,
-    @Optional val email: String? = null,
-    @Optional val url: String? = null,
-    @Optional val asString: Boolean = false
-) {
-    companion object {
-        @JvmStatic fun string(string: String): Person = PersonSerializer.parsePersonString(string)
-    }
+open class RepositoryConvention {
+    @get:Internal internal var wasModified = false
+        private set
+
+    var url: String? = null
+        set(value) {
+            field = requireNotNull(value) { "cannot set url to null" }
+            wasModified = true
+        }
+
+    var type: String? = null
+        set(value) {
+            field = requireNotNull(value) { "cannot set type to null" }
+            wasModified = true
+        }
 }

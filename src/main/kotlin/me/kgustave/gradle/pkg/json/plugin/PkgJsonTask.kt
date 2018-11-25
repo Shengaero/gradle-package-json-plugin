@@ -13,16 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-@file:Suppress("RemoveEmptyPrimaryConstructor", "unused")
+@file:Suppress("unused", "UnstableApiUsage", "MemberVisibilityCanBePrivate")
 package me.kgustave.gradle.pkg.json.plugin
 
-import groovy.lang.Closure
-import kotlinx.serialization.json.JSON
-import me.kgustave.gradle.pkg.json.internal.Open
 import me.kgustave.gradle.pkg.json.internal.PkgJsonSerializer
 import me.kgustave.gradle.pkg.json.internal.getValue
 import me.kgustave.gradle.pkg.json.plugin.conventions.PkgJsonCacheConvention
 import me.kgustave.gradle.pkg.json.plugin.conventions.PkgJsonConvention
+import me.kgustave.gradle.pkg.json.plugin.conventions.PkgJsonFormattingConvention
 import org.gradle.api.Action
 import org.gradle.api.DefaultTask
 import org.gradle.api.Incubating
@@ -30,13 +28,12 @@ import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.TaskAction
-import javax.inject.Inject
+import org.gradle.kotlin.dsl.create
 
 /**
  * Task to generate a package.json file.
  */
-@Open class PkgJsonTask @Inject constructor(private val json: JSON): DefaultTask() {
-
+open class PkgJsonTask: DefaultTask() {
     /**
      * The name of the output file.
      *
@@ -65,12 +62,13 @@ import javax.inject.Inject
     var autoUpdateFile: Boolean = false
 
     init {
-        group = System.getProperty("package.json.task.group") ?: "package json"
-        description = "Updates the 'package.json' file for the project."
+        this.group = "package json"
+        this.description = "Updates the 'package.json' file for the project."
 
         with(extensions) {
-            add(PkgJsonConvention.NAME, PkgJsonConvention::class.java)
-            add(PkgJsonCacheConvention.NAME, PkgJsonCacheConvention::class.java)
+            create<PkgJsonConvention>(PkgJsonConvention.NAME, project.objects)
+            create<PkgJsonFormattingConvention>(PkgJsonFormattingConvention.NAME)
+            create<PkgJsonCacheConvention>(PkgJsonCacheConvention.NAME)
         }
     }
 
@@ -85,6 +83,22 @@ import javax.inject.Inject
     val pkg: PkgJsonConvention by extensions
 
     /**
+     * Configures the [package json convention][pkg] for this task.
+     */
+    fun pkg(action: Action<in PkgJsonConvention>) = action.execute(pkg)
+
+    /**
+     * The [formatting convention][PkgJsonFormattingConvention] of this task.
+     */
+    @get:[Optional Input]
+    val formatting: PkgJsonFormattingConvention by extensions
+
+    /**
+     * Configures the [formatting convention][formatting] for this task.
+     */
+    fun formatting(action: Action<in PkgJsonFormattingConvention>) = action.execute(formatting)
+
+    /**
      * The [cache convention][PkgJsonCacheConvention] of this task.
      */
     @Incubating
@@ -92,34 +106,10 @@ import javax.inject.Inject
     val cache: PkgJsonCacheConvention by extensions
 
     /**
-     * Configures the [package json convention][pkg] for this task.
-     */
-    fun pkg(action: Action<in PkgJsonConvention>) {
-        action.execute(pkg)
-    }
-
-    /**
-     * Configures the [package json convention][pkg] for this task.
-     */
-    fun pkg(closure: Closure<Unit>) {
-        closure.apply { delegate = pkg }.call()
-    }
-
-    /**
      * Configures the [cache convention][cache] for this task.
      */
     @Incubating
-    fun cache(action: Action<in PkgJsonCacheConvention>) {
-        action.execute(cache)
-    }
-
-    /**
-     * Configures the [cache convention][cache] for this task.
-     */
-    @Incubating
-    fun cache(closure: Closure<Unit>) {
-        closure.apply { delegate = cache }.call()
-    }
+    fun cache(action: Action<in PkgJsonCacheConvention>) = action.execute(cache)
 
     @Internal
     @TaskAction
@@ -130,12 +120,12 @@ import javax.inject.Inject
         }
 
         packageJsonFile.writeText(
-            text = json.stringify(PkgJsonSerializer, pkg.toPkgJson()),
+            text = formatting.createJsonHandler().stringify(PkgJsonSerializer, pkg.toPkgJson()),
             charset = Charsets.UTF_8
         )
     }
 
     internal companion object {
-        internal const val DEFAULT_NAME = "packageJson"
+        @Internal internal const val DEFAULT_NAME = "packageJson"
     }
 }

@@ -27,7 +27,6 @@ plugins {
   id("java-gradle-plugin")
   id("kotlin")
   id("kotlin-kapt")
-  id("kotlin-allopen")
   id("kotlinx-serialization")
   id("com.jfrog.bintray") version "1.8.4"
   id("org.jetbrains.dokka") version "0.9.17"
@@ -41,7 +40,6 @@ val kotlinVersion: String by ext
 val serializationVersion: String by ext
 val autoServiceVersion: String by ext
 val jupiterVersion: String by ext
-val pluginName: String by extra { "gradle-package-json-plugin" }
 
 repositories {
   jcenter()
@@ -51,16 +49,16 @@ repositories {
 
 dependencies {
   api(kotlin("stdlib-jdk8", kotlinVersion))
+  api(kotlin("gradle-plugin", kotlinVersion))
   api(kotlin("gradle-plugin-api", kotlinVersion))
+  api(gradleKotlinDsl())
 
   api("org.jetbrains.kotlinx:kotlinx-serialization-runtime:$serializationVersion")
 
   with("com.google.auto.service:auto-service:$autoServiceVersion") {
-    compile(this)
+    api(this)
     kapt(this)
   }
-
-  gradleTestKit()
 
   testImplementation(kotlin("reflect", kotlinVersion))
   testImplementation(kotlin("test-junit5", kotlinVersion))
@@ -87,13 +85,9 @@ kotlin {
   }
 }
 
-allOpen {
-  annotation("me.kgustave.gradle.pkg.json.internal.Open")
-}
-
 gradlePlugin {
   plugins {
-    register(pluginName) {
+    register(rootProject.name) {
       id = "me.kgustave.pkg.json"
       implementationClass = "me.kgustave.gradle.pkg.json.plugin.PkgJsonPlugin"
     }
@@ -140,7 +134,7 @@ tasks {
     group = "build"
     description = "Generates a jar"
 
-    baseName = pluginName
+    baseName = rootProject.name
     version = "${project.version}"
     classifier = ""
   }
@@ -149,7 +143,7 @@ tasks {
     group = "build"
     description = "Generates a sources jar"
 
-    baseName = pluginName
+    baseName = rootProject.name
     version = "${project.version}"
     classifier = "sources"
 
@@ -162,7 +156,7 @@ tasks {
 
     dependsOn(dokka)
 
-    baseName = pluginName
+    baseName = rootProject.name
     version = "${project.version}"
     classifier = "javadoc"
 
@@ -260,7 +254,7 @@ bintray {
   setPublications("PluginPublish")
 
   with(pkg) {
-    name = pluginName
+    name = rootProject.name
     repo = "maven"
     vcsUrl = "https://github.com/Shengaero/gradle-package-json-plugin.git"
     githubRepo = "https://github.com/Shengaero/gradle-package-json-plugin/"
@@ -285,7 +279,7 @@ publishing {
   publications {
     create("PluginPublish", MavenPublication::class) {
       this.groupId = "${project.group}"
-      this.artifactId = pluginName
+      this.artifactId = rootProject.name
       this.version = "${project.version}"
 
       from(project.components["java"])

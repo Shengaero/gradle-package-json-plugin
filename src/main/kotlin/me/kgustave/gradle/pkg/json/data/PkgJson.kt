@@ -26,9 +26,12 @@ data class PkgJson(
     @Optional val description: String? = null,
     @Optional val main: String? = null,
     @Optional val author: Person? = null,
+    @Optional val contributors: List<Person> = emptyList(),
     @Optional val tags: List<String> = emptyList(),
     @Optional val licenses: List<String> = emptyList(),
     @Optional val license: String? = licenses.getOrNull(0),
+    @Optional val scripts: Map<String, String> = emptyMap(),
+    @Optional val repository: Repository? = null,
     @Optional val dependencies: Map<String, String> = emptyMap(),
     @Optional val devDependencies: Map<String, String> = emptyMap(),
     @Optional val peerDependencies: Map<String, String> = emptyMap()

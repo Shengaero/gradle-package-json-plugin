@@ -13,18 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-@file:Suppress("RemoveEmptyPrimaryConstructor", "PropertyName", "unused", "MemberVisibilityCanBePrivate")
+@file:Suppress("RemoveEmptyPrimaryConstructor", "PropertyName", "unused", "MemberVisibilityCanBePrivate", "UnstableApiUsage")
 package me.kgustave.gradle.pkg.json.plugin.conventions
 
-import groovy.lang.Closure
 import me.kgustave.gradle.pkg.json.data.Person
 import me.kgustave.gradle.pkg.json.data.PkgJson
-import me.kgustave.gradle.pkg.json.internal.Open
+import me.kgustave.gradle.pkg.json.data.Repository
 import org.gradle.api.Action
+import org.gradle.api.model.ObjectFactory
 import org.gradle.api.tasks.Internal
-import java.util.*
+import org.gradle.kotlin.dsl.newInstance
+import java.util.LinkedList
+import javax.inject.Inject
 
-@Open class PkgJsonConvention constructor() {
+open class PkgJsonConvention
+@Inject constructor(private val factory: ObjectFactory) {
     /////////////////////////
     // GENERAL INFORMATION //
     /////////////////////////
@@ -78,13 +81,26 @@ import java.util.*
     var tags = emptyList<String>()
         set(value) { field = value.distinct() }
 
+    //////////////////////
+    // REPOSITORY FIELD //
+    //////////////////////
+
+    val repository = factory.newInstance<RepositoryConvention>()
+
+    @get:Internal internal val _repository: Repository? get() = with(repository) {
+        if(!wasModified) return null
+        val type = requireNotNull(type) { "type must be specified!" }
+        val url = requireNotNull(url) { "url must be specified!" }
+        return Repository(type, url)
+    }
+
+    fun repository(action: Action<in RepositoryConvention>) {
+        action.execute(repository)
+    }
+
     //////////////////
     // AUTHOR FIELD //
     //////////////////
-
-    @set:Internal
-    @get:Internal
-    internal var _author: Person? = null
 
     /**
      * The author convention used to configure the `author`
@@ -92,20 +108,47 @@ import java.util.*
      *
      * @see PersonConvention
      */
-    val author: PersonConvention = PersonConvention { _author = it }
+    val author = factory.newInstance<PersonConvention>()
+
+    @Internal internal var _author: Person? = null
+        get() = field ?: with(author) {
+            if (!wasModified) return null
+            val name = requireNotNull(name) { "Name must be modified!" }
+            return Person(name, email, url)
+        }
 
     fun author(action: Action<in PersonConvention>) {
-        author.invoke(action)
-    }
-
-    fun author(closure: Closure<Any>) {
-        author.invoke(closure)
+        action.execute(author)
+        if(author.wasModified) {
+            _author = null
+        }
     }
 
     fun author(author: String) {
-        author(object: Closure<Any>(null) {
-            override fun call(): Any = author
-        })
+        _author = Person.string(author)
+    }
+
+    ////////////////////////
+    // CONTRIBUTORS FIELD //
+    ////////////////////////
+
+    var contributors: List<PersonConvention.() -> Unit>
+        get() = error("getting not supported")
+        set(value) {
+            _contributors = value.mapNotNull c@ { action ->
+                with(factory.newInstance<PersonConvention>()) {
+                    action(this)
+                    if(!wasModified) return@c null
+                    val name = requireNotNull(name) { "Name must be set!" }
+                    return@c Person(name, email, url)
+                }
+            }
+        }
+
+    @Internal internal var _contributors = emptyList<Person>()
+
+    fun contributors(contributors: Collection<Action<in PersonConvention>>) {
+        this.contributors = contributors.map<Action<in PersonConvention>, PersonConvention.() -> Unit> { action -> { action.execute(this) } }
     }
 
     ///////////////////////
@@ -238,6 +281,12 @@ import java.util.*
         get() = _licenses
         set(value) { _licenses = value.asSequence().distinct().toCollection(LinkedList()) }
 
+    /////////////
+    // SCRIPTS //
+    /////////////
+
+    var scripts = emptyMap<String, String>()
+
     @Internal internal fun toPkgJson(): PkgJson {
         require(::name.isInitialized) { "package name is required" }
         require(::version.isInitialized) { "package version is required" }
@@ -249,85 +298,16 @@ import java.util.*
             description = description,
             main = main,
             author = _author,
+            contributors = _contributors,
             tags = tags,
             licenses = licenses,
             license = licenses.getOrNull(0),
+            scripts = scripts,
+            repository = _repository,
             dependencies = dependencies,
             devDependencies = devDependencies,
             peerDependencies = peerDependencies
         )
-    }
-
-    /**
-     * Configuration for a package.json field that takes a "person" as an argument.
-     *
-     * In json form, this is an object with three keys:
-     *
-     * 1) [name][PersonConvention.name] - The name of the person.
-     * 2) [email][PersonConvention.email] - The person's email.
-     * 3) [url][PersonConvention.url] - The person's url (presumably to a website).
-     *
-     * Only the name must be specified, all other fields are optional, but note that if the name is
-     * not specified mutations to instances of this class have no effect.
-     *
-     * This convention delegates back to the owning [package-json-convention][PkgJsonConvention].
-     */
-    inner class PersonConvention
-    internal constructor(private val delegate: (person: Person) -> Unit) {
-        private lateinit var _name: String
-
-        /**
-         * The name of the person.
-         */
-        var name: String
-            get() = _name
-            set(value) {
-                _name = value
-                buildPerson()
-            }
-
-        /**
-         * The person's email.
-         */
-        var email: String? = null
-            set(value) {
-                field = value
-                if(nameIsInit) {
-                    buildPerson()
-                }
-            }
-
-        /**
-         * The person's url (presumably to a website).
-         */
-        var url: String? = null
-            set(value) {
-                field = value
-                if(nameIsInit) {
-                    buildPerson()
-                }
-            }
-
-        @get:Internal internal val nameIsInit get() = ::_name.isInitialized
-
-        @Internal internal operator fun invoke(action: Action<in PersonConvention>) {
-            action.execute(this)
-            buildPerson()
-        }
-
-        @Internal internal operator fun invoke(closure: Closure<Any>) {
-            closure.delegate = this
-            when(val output = closure.call()) {
-                null, is Unit -> buildPerson()
-                is CharSequence -> delegate(Person.string("$output"))
-                else -> throw IllegalArgumentException("Output type of closure is not valid: ${output::class.java}")
-            }
-        }
-
-        private fun buildPerson() {
-            require(nameIsInit) { "Name must be initialized when configuring!" }
-            delegate(Person(name, email, url))
-        }
     }
 
     internal companion object {
