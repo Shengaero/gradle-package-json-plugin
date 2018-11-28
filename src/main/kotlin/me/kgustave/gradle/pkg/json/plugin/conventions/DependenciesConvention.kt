@@ -13,29 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-@file:Suppress("MemberVisibilityCanBePrivate")
 package me.kgustave.gradle.pkg.json.plugin.conventions
 
+import org.gradle.api.plugins.ExtraPropertiesExtension
 import org.gradle.api.tasks.Internal
-import kotlin.math.max
 
-open class PkgJsonFormattingConvention {
-    var indentFactor = 2
-        set(value) { field = max(0, value) }
+open class DependenciesConvention: ExtraPropertiesExtension {
+    @Internal internal val dependencies = hashMapOf<String, String>()
 
-    var shouldIndent: Boolean
-        get() = indentFactor > 0
-        set(value) {
-            if(value) {
-                if(indentFactor == 0) {
-                    indentFactor = 2
-                }
-            } else {
-                indentFactor = 0
-            }
-        }
+    override fun has(name: String): Boolean = name in dependencies
+    operator fun contains(name: String): Boolean = has(name)
+    override operator fun get(name: String): Any? = dependencies[name]
+    override operator fun set(name: String, value: Any?) { dependencies[name] = value.toString() }
+    override fun getProperties(): Map<String, String> = dependencies
 
-    internal companion object {
-        @Internal internal const val NAME = "formatting"
-    }
+    infix fun String.to(version: String) = set(this, version)
 }

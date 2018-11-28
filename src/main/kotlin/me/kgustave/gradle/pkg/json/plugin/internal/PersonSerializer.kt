@@ -13,13 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package me.kgustave.gradle.pkg.json.internal
+package me.kgustave.gradle.pkg.json.plugin.internal
 
 import kotlinx.serialization.Decoder
 import kotlinx.serialization.Encoder
 import kotlinx.serialization.Serializer
 import kotlinx.serialization.json.*
-import me.kgustave.gradle.pkg.json.data.Person
+import me.kgustave.gradle.pkg.json.plugin.internal.data.Person
 
 @Serializer(forClass = Person::class)
 internal object PersonSerializer {

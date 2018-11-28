@@ -16,29 +16,51 @@
 @file:Suppress("MemberVisibilityCanBePrivate")
 package me.kgustave.gradle.pkg.json.plugin.conventions
 
-import me.kgustave.gradle.pkg.json.plugin.internal.data.Repository
+import me.kgustave.gradle.pkg.json.plugin.internal.data.Directories
 import org.gradle.api.tasks.Internal
 
-open class RepositoryConvention {
+open class DirectoriesConvention {
     @get:Internal internal var wasModified = false
         private set
 
-    var url: String? = null
+    var lib: String? = null
         set(value) {
-            field = requireNotNull(value) { "cannot set url to null" }
+            field = value
             wasModified = true
         }
 
-    var type: String? = null
+    var bin: String? = null
         set(value) {
-            field = requireNotNull(value) { "cannot set type to null" }
+            field = value
             wasModified = true
         }
 
-    @Internal internal fun buildRepository(): Repository? {
+    var man: String? = null
+        set(value) {
+            field = value
+            wasModified = true
+        }
+
+    var doc: String? = null
+        set(value) {
+            field = value
+            wasModified = true
+        }
+
+    var examples: String? = null
+        set(value) {
+            field = value
+            wasModified = true
+        }
+
+    var test: String? = null
+        set(value) {
+            field = value
+            wasModified = true
+        }
+
+    @Internal internal fun buildDirectories(): Directories? {
         if(!wasModified) return null
-        val type = requireNotNull(type) { "type must be specified!" }
-        val url = requireNotNull(url) { "url must be specified!" }
-        return Repository(type, url)
+        return Directories(lib, bin, man, doc, examples, test)
     }
 }

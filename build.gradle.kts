@@ -52,9 +52,7 @@ dependencies {
   api(kotlin("gradle-plugin", kotlinVersion))
   api(kotlin("gradle-plugin-api", kotlinVersion))
   api(gradleKotlinDsl())
-
   api("org.jetbrains.kotlinx:kotlinx-serialization-runtime:$serializationVersion")
-
   with("com.google.auto.service:auto-service:$autoServiceVersion") {
     api(this)
     kapt(this)
@@ -62,11 +60,9 @@ dependencies {
 
   testImplementation(kotlin("reflect", kotlinVersion))
   testImplementation(kotlin("test-junit5", kotlinVersion))
-
   testImplementation("org.junit.jupiter:junit-jupiter-api:$jupiterVersion")
   testImplementation("org.junit.jupiter:junit-jupiter-params:$jupiterVersion")
   testImplementation("org.junit.jupiter:junit-jupiter-migrationsupport:$jupiterVersion")
-
   testRuntime("org.junit.jupiter:junit-jupiter-engine:$jupiterVersion")
 }
 
@@ -122,6 +118,7 @@ tasks {
 
     moduleName = rootProject.name
     impliedPlatforms = mutableListOf("JVM")
+    includes = listOf("src/main/kotlin/packages.md")
 
     noStdlibLink = false
     skipDeprecated = true
@@ -219,8 +216,8 @@ tasks {
       }
     }
 
-    dependsOn(clean)
-    mustRunAfter(clean)
+    dependsOn("cleanTest")
+    mustRunAfter("cleanTest")
   }
 
   val build by "build" {

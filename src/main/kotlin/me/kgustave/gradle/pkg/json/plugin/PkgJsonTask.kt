@@ -13,14 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-@file:Suppress("unused", "UnstableApiUsage", "MemberVisibilityCanBePrivate")
+@file:Suppress("unused", "UnstableApiUsage", "MemberVisibilityCanBePrivate", "DeprecatedCallableAddReplaceWith", "DEPRECATION")
 package me.kgustave.gradle.pkg.json.plugin
 
-import me.kgustave.gradle.pkg.json.internal.PkgJsonSerializer
-import me.kgustave.gradle.pkg.json.internal.getValue
+import kotlinx.serialization.json.JsonTreeParser
 import me.kgustave.gradle.pkg.json.plugin.conventions.PkgJsonCacheConvention
 import me.kgustave.gradle.pkg.json.plugin.conventions.PkgJsonConvention
 import me.kgustave.gradle.pkg.json.plugin.conventions.PkgJsonFormattingConvention
+import me.kgustave.gradle.pkg.json.plugin.internal.data.PkgJson
+import me.kgustave.gradle.pkg.json.plugin.internal.jsonObjectOf
+import me.kgustave.gradle.pkg.json.plugin.internal.stringify
 import org.gradle.api.Action
 import org.gradle.api.DefaultTask
 import org.gradle.api.Incubating
@@ -29,6 +31,9 @@ import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.TaskAction
 import org.gradle.kotlin.dsl.create
+import org.gradle.kotlin.dsl.getByType
+import org.gradle.kotlin.dsl.getValue
+import kotlin.reflect.full.memberProperties
 
 /**
  * Task to generate a package.json file.
@@ -61,14 +66,24 @@ open class PkgJsonTask: DefaultTask() {
     @[Optional Input]
     var autoUpdateFile: Boolean = false
 
+    /**
+     * Allows the package.json plugin to automatically configure it's dependency objects
+     * via gradle's native [dependencies][org.gradle.api.Project.dependencies] DSL.
+     *
+     * **Note** - Dependency configurations are an __experimental__ feature and
+     * may be removed or have breaking changes made between releases.
+     */
+    @Incubating
+    @[Optional Input]
+    var enableDependencyConfiguration: Boolean = false
+
     init {
         this.group = "package json"
         this.description = "Updates the 'package.json' file for the project."
 
         with(extensions) {
-            create<PkgJsonConvention>(PkgJsonConvention.NAME, project.objects)
-            create<PkgJsonFormattingConvention>(PkgJsonFormattingConvention.NAME)
             create<PkgJsonCacheConvention>(PkgJsonCacheConvention.NAME)
+            create<PkgJsonFormattingConvention>(PkgJsonFormattingConvention.NAME)
         }
     }
 
@@ -80,11 +95,13 @@ open class PkgJsonTask: DefaultTask() {
      * The [package json convention][PkgJsonConvention] of this task.
      */
     @get:[Optional Input]
-    val pkg: PkgJsonConvention by extensions
+    @Deprecated("use top level extension")
+    val pkg: PkgJsonConvention get() = project.extensions.getByType()
 
     /**
      * Configures the [package json convention][pkg] for this task.
      */
+    @Deprecated("use top level extension")
     fun pkg(action: Action<in PkgJsonConvention>) = action.execute(pkg)
 
     /**
@@ -108,24 +125,53 @@ open class PkgJsonTask: DefaultTask() {
     /**
      * Configures the [cache convention][cache] for this task.
      */
-    @Incubating
-    fun cache(action: Action<in PkgJsonCacheConvention>) = action.execute(cache)
+    @Incubating fun cache(action: Action<in PkgJsonCacheConvention>) = action.execute(cache)
 
-    @Internal
-    @TaskAction
-    internal fun generate() {
+    @Internal @TaskAction internal fun generate() {
         val packageJsonFile = project.file(outputName)
+
         if(!packageJsonFile.exists()) {
+            logger.debug("No package.json file found at $packageJsonFile")
+            logger.debug("Creating new package.json file..")
+
             check(packageJsonFile.createNewFile()) { "Could not create package.json file!" }
+
+            logger.debug("package.json file created at $packageJsonFile")
         }
 
-        packageJsonFile.writeText(
-            text = formatting.createJsonHandler().stringify(PkgJsonSerializer, pkg.toPkgJson()),
-            charset = Charsets.UTF_8
-        )
+        val result = runCatching { JsonTreeParser.parse(packageJsonFile.readText(Charsets.UTF_8)) }
+
+        val oldJson = result.getOrNull() ?: jsonObjectOf()
+
+        val extra = oldJson.asSequence()
+            .filter { it.key !in pkgJsonProperties }
+            .associate { it.key to it.value }
+
+        if(extra.isNotEmpty()) {
+            logger.debug("Discovered ${extra.size} extra properties: " +
+                extra.keys.joinToString(", ", prefix = "[", postfix = "]"))
+            logger.debug("These will be preserved.")
+        }
+
+        val newJson = project.extensions
+            .getByType<PkgJsonConvention>().toPkgJson()
+            .copy(extra = extra).toJson()
+
+        val text = newJson.stringify(formatting.indentFactor)
+
+        logger.debug("Text conversion complete:\n$text")
+        logger.debug("Writing to package.json file...")
+
+        packageJsonFile.writeText(text = text, charset = Charsets.UTF_8)
+
+        logger.debug("Successfully wrote to package.json file!")
     }
 
     internal companion object {
         @Internal internal const val DEFAULT_NAME = "packageJson"
+
+        private val pkgJsonProperties by lazy {
+            PkgJson::class.memberProperties.asSequence().map { it.name }.toHashSet()
+        }
     }
 }

@@ -13,19 +13,38 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package me.kgustave.gradle.pkg.json.data
+package me.kgustave.gradle.pkg.json.plugin.internal.data
 
 import kotlinx.serialization.Optional
 import kotlinx.serialization.Serializable
-import me.kgustave.gradle.pkg.json.internal.PersonSerializer
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.json
+import me.kgustave.gradle.pkg.json.plugin.internal.PersonSerializer
 
 @Serializable(with = PersonSerializer::class)
-data class Person(
+internal data class Person(
     val name: String,
     @Optional val email: String? = null,
     @Optional val url: String? = null,
     @Optional val asString: Boolean = false
-) {
+): JsonAdapter<JsonElement> {
+    override fun toJson(): JsonElement {
+        if(asString) return JsonPrimitive(buildString {
+            append(name)
+            if(email != null) append(" <$email>")
+            if(url != null) append(" ($url)")
+        })
+
+        return json {
+            "name" to name
+            email?.let { "email" to it }
+            url?.let { "url" to it }
+        }
+    }
+
+    override fun toString(): String = toJsonString()
+
     companion object {
         @JvmStatic fun string(string: String): Person = PersonSerializer.parsePersonString(string)
     }

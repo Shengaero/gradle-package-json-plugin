@@ -36,6 +36,12 @@ dependencies {
   implementation(kotlin("stdlib-js"))
 
   testImplementation(kotlin("test-js"))
+
+  devDependency("mocha:5.2.0")
+  devDependency("kotlin-test:1.3.10")
+
+  peerDependency("bird:1.2.1")
+  peerDependency("kotlin:1.3.10")
 }
 
 kotlin {
@@ -51,6 +57,26 @@ node {
   download = false
   npmWorkDir = file("$buildDir/npm")
   nodeModulesDir = file("node_modules")
+}
+
+pkg {
+  val relativeBuildDir = buildDir.toRelativeString(projectDir).replace(File.separatorChar, '/')
+
+  name = "birb-kt"
+  version = "1.2.1"
+  private = true
+  main = "$relativeBuildDir/kotlin-js-min/main/birb-kt.js"
+  description = "Kotlin bindings for the birb npm package"
+  keywords = listOf("kotlin2js", "birb")
+
+  author {
+    name = "Kaidan Gustave"
+    email = "kaidangustave@yahoo.com"
+    url = "kgustave@yahoo.com"
+  }
+
+  license = "Apache-2.0"
+  scripts = mapOf("test" to "mocha $relativeBuildDir/kotlin-js-min/test/birb-kt_test.js")
 }
 
 tasks {
@@ -85,62 +111,27 @@ tasks {
 
   val packageJson by named<PkgJsonTask>("packageJson") {
     group = "node"
-
-    val relativeBuildDir = buildDir.toRelativeString(projectDir).replace(File.separatorChar, '/')
-
-    pkg {
-      name = "birb-kt"
-      version = "1.2.1"
-      private = true
-      description = "Kotlin bindings for the birb npm package"
-      tags = listOf("kotlin2js", "birb")
-      license = "Apache-2.0"
-      main = "$relativeBuildDir/kotlin-js-min/main/birb-kt.js"
-
-      scripts = mapOf(
-        "test" to "mocha $relativeBuildDir/kotlin-js-min/test/birb-kt_test.js"
-      )
-      
-      author {
-        name = "Kaidan Gustave"
-        email = "kaidangustave@yahoo.com"
-        url = "kgustave@yahoo.com"
-      }
-
-      devDependencies = mapOf(
-        "mocha" to "5.2.0",
-        "kotlin-test" to "1.3.10"
-      )
-
-      peerDependencies = mapOf(
-        "birb" to "1.2.1",
-        "kotlin" to "1.3.10"
-      )
-    }
   }
 
   val installDependencies by register<NpmTask>("installDependencies") {
     group = "npm-dependencies"
     description = "Installs dependencies"
 
-    setArgs(listOf("install", "--save",
-      *packageJson.pkg.dependencies.dependencyArray()))
+    setArgs(listOf("install", "--save", *pkg.dependencies.dependencyArray()))
   }
 
   val installDevDependencies by register<NpmTask>("installDevDependencies") {
     group = "npm-dependencies"
     description = "Installs dev dependencies"
 
-    setArgs(listOf("install", "--save-dev",
-      *packageJson.pkg.devDependencies.dependencyArray()))
+    setArgs(listOf("install", "--save-dev", *pkg.devDependencies.dependencyArray()))
   }
 
   val installPeerDependencies by register<NpmTask>("installPeerDependencies") {
     group = "npm-dependencies"
     description = "Installs peer dependencies as dev dependencies"
 
-    setArgs(listOf("install", "--save-dev",
-      *packageJson.pkg.peerDependencies.dependencyArray()))
+    setArgs(listOf("install", "--save-dev", *pkg.peerDependencies.dependencyArray()))
   }
 
   create("npmPackage") {

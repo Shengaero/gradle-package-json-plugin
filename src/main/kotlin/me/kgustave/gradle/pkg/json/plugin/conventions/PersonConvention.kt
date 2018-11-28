@@ -13,8 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+@file:Suppress("MemberVisibilityCanBePrivate")
 package me.kgustave.gradle.pkg.json.plugin.conventions
 
+import me.kgustave.gradle.pkg.json.plugin.internal.data.Person
 import org.gradle.api.tasks.Internal
 
 /**
@@ -61,4 +63,10 @@ open class PersonConvention {
             field = value
             wasModified = true
         }
+
+    @Internal internal fun buildPerson(): Person? {
+        if(!wasModified) return null
+        val name = requireNotNull(name) { "Name must be set!" }
+        return Person(name, email, url)
+    }
 }

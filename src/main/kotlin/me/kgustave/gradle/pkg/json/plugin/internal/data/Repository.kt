@@ -13,14 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package me.kgustave.gradle.pkg.json.internal
+package me.kgustave.gradle.pkg.json.plugin.internal.data
 
-import org.gradle.api.plugins.ExtensionContainer
-import org.gradle.api.tasks.Internal
-import kotlin.reflect.KProperty
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.json
 
-@Internal
-internal inline operator fun <reified T: Any> ExtensionContainer.getValue(instance: Any?, property: KProperty<*>): T {
-    val ext = checkNotNull(this.findByName(property.name)) { "Could not find ${property.name} in extension container!" }
-    return checkNotNull(ext as? T) { "Extension with name ${property.name} was not of type ${T::class.java}" }
+@Serializable
+internal data class Repository(val type: String, val url: String): JsonAdapter<JsonObject> {
+    override fun toJson(): JsonObject = json {
+        "type" to type
+        "url" to url
+    }
+
+    override fun toString(): String = toJsonString()
 }

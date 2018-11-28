@@ -16,8 +16,8 @@
 package me.kgustave.gradle.pkg.json.tests.serialization
 
 import kotlinx.serialization.json.JSON
-import me.kgustave.gradle.pkg.json.data.Person
-import me.kgustave.gradle.pkg.json.internal.PersonSerializer
+import me.kgustave.gradle.pkg.json.plugin.internal.data.Person
+import me.kgustave.gradle.pkg.json.plugin.internal.PersonSerializer
 import me.kgustave.gradle.pkg.json.utils.SerializationTests
 import org.junit.jupiter.api.MethodOrderer
 import org.junit.jupiter.api.Test

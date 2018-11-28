@@ -62,11 +62,9 @@ full manipulation of the plugin from top to bottom called `packageJson`!
 
 Here's a simple configuration:
 ```groovy
-packageJson {
-    pkg {
-        name 'my-package'
-        version '1.0'
-    }
+pkg {
+    name 'my-package'
+    version '1.0'
 }
 ```
 

@@ -27,6 +27,9 @@ open class PkgJsonCacheConvention @Inject constructor() {
     /**
      * Directory in which package.json outputs are cached.
      *
+     * See [outputDirectory] and [outputName] for configurations
+     * the on caching feature.
+     *
      * **Note** - Package-JSON caching is an __experimental__ feature
      * may be removed or have breaking changes made between releases.
      */
@@ -36,6 +39,10 @@ open class PkgJsonCacheConvention @Inject constructor() {
 
     /**
      * Directory in which package.json outputs are cached.
+     *
+     * This should be the name of a directory relative to the root of your project.
+     *
+     * Default is `.gradle/package-json-cache`
      *
      * **Note** - Package-JSON caching is an __experimental__ feature and
      * must be enabled by setting the [enabled] property to `true`.
@@ -47,6 +54,8 @@ open class PkgJsonCacheConvention @Inject constructor() {
     /**
      * Name of the file in created in [outputDirectory] where package.json
      * output is cached.
+     *
+     * Each output will be overwritten when changes are made to the package specification.
      *
      * **Note** - Package-JSON caching is an __experimental__ feature and
      * must be enabled by setting the [enabled] property to `true`.

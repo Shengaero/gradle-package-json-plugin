@@ -16,12 +16,28 @@
 package me.kgustave.gradle.pkg.json.tests.serialization
 
 import kotlinx.serialization.json.JSON
+import kotlinx.serialization.parse
 import kotlinx.serialization.stringify
-import me.kgustave.gradle.pkg.json.data.Repository
+import me.kgustave.gradle.pkg.json.plugin.internal.data.Repository
+import me.kgustave.gradle.pkg.json.utils.SerializationTests
+import org.junit.jupiter.api.MethodOrderer
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestMethodOrder
 import kotlin.test.assertEquals
 
+@SerializationTests
+@TestMethodOrder(MethodOrderer.Alphanumeric::class)
 class RepositorySerializationTests {
+    @Test fun `test deserialize repository`() {
+        assertEquals(
+            expected = Repository(
+                type = "git",
+                url = "https://github.com/Shengaero/gradle-package-json-plugin.git"
+            ),
+            actual = JSON.parse("""{"type":"git","url":"https://github.com/Shengaero/gradle-package-json-plugin.git"}""")
+        )
+    }
+
     @Test fun `test serialize repository`() {
         assertEquals(
             expected = """{"type":"git","url":"https://github.com/Shengaero/gradle-package-json-plugin.git"}""",

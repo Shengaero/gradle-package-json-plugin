@@ -28,64 +28,73 @@ node {
   nodeModulesDir = file("node_modules")
 }
 
-fun Map<String, String>.dependencyArray(): Array<String> =
-  map { (dependency, version) -> "$dependency@$version" }.toTypedArray()
+pkg {
+  name = "kotlin-like"
+  version = "1.0.0"
+  private = true
+  main = "src/kotlin-like.js"
+  description = "Kotlin functions, but it's actually javascript!"
+  keywords = listOf("not-kotlin", "notlin")
 
-tasks {
-  val packageJson by named<PkgJsonTask>("packageJson") {
-    group = "node"
-    pkg {
-      name = "kotlin-like"
-      version = "1.0.0"
-      private = true
-      description = "Kotlin functions, but it's actually javascript!"
-      tags = listOf("not-kotlin", "notlin")
-      license = "Apache-2.0"
-      main = "src/kotlin-like.js"
-
-      author {
-        name = "Kaidan Gustave"
-        email = "kaidangustave@yahoo.com"
-        url = "kgustave@yahoo.com"
-      }
-
-      devDependencies = mapOf(
-        "mocha" to "5.2.0",
-        "chai" to "4.2.0"
-      )
-    }
+  author {
+    name = "Kaidan Gustave"
+    email = "kaidangustave@yahoo.com"
+    url = "kgustave@yahoo.com"
   }
 
-  val installDependencies by register<NpmTask>("installDependencies") {
-    group = "npm-dependencies"
-    description = "Installs dependencies"
+  license = "Apache-2.0"
+  scripts = mapOf("test" to "mocha test/tests.js")
 
-    setArgs(listOf("install", "--save", *packageJson.pkg.dependencies.dependencyArray()))
+  directories {
+    lib = "./src"
+    test = "./test"
   }
+}
 
-  val installDevDependencies by register<NpmTask>("installDevDependencies") {
-    group = "npm-dependencies"
-    description = "Installs dev dependencies"
+dependencies {
+  devDependency("mocha:5.2.0")
+  devDependency("chai:4.2.0")
+}
 
-    setArgs(listOf("install", "--save-dev", *packageJson.pkg.devDependencies.dependencyArray()))
-  }
+fun Map<String, String>.dependencyArray(): Array<String> = map { "${it.key}@${it.value}" }.toTypedArray()
 
-  create("npmPackage") {
-    group = "node"
+tasks.named<PkgJsonTask>("packageJson") {
+  group = "node"
+  autoUpdateFile = true
+}
 
-    dependsOn(packageJson)
-    dependsOn(installDependencies)
-    dependsOn(installDevDependencies)
+task<NpmTask>("installDependencies") {
+  group = "npm-dependencies"
+  description = "Installs dependencies"
+  dependsOn("packageJson")
 
-    installDependencies.mustRunAfter(packageJson)
-    installDevDependencies.mustRunAfter(installDependencies)
-  }
+  setArgs(listOf("install", "--save", *pkg.dependencies.dependencyArray()))
+}
 
-  create<NodeTask>("runMocha") {
-    group = "npm-scripts"
-    description = "Tests with mocha"
+task<NpmTask>("installDevDependencies") {
+  group = "npm-dependencies"
+  description = "Installs dev dependencies"
+  dependsOn("packageJson")
 
-    setScript(file("node_modules/mocha/bin/mocha"))
-    setArgs(listOf(file("test/tests.js")))
-  }
+  setArgs(listOf("install", "--save-dev", *pkg.devDependencies.dependencyArray()))
+}
+
+task<DefaultTask>("npmPackage") {
+  group = "node"
+  dependsOn("installDependencies")
+  dependsOn("installDevDependencies")
+}
+
+task<NodeTask>("runMocha") {
+  group = "npm-scripts"
+  description = "Tests with mocha"
+
+  setScript(file("node_modules/mocha/bin/mocha"))
+  setArgs(listOf(file("test/tests.js")))
+}
+
+task<Test>("test") {
+  group = "verification"
+  description = "Runs unit tests"
+  dependsOn("runMocha")
 }

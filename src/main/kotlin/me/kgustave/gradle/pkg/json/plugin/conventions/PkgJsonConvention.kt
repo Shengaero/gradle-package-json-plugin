@@ -16,15 +16,14 @@
 @file:Suppress("RemoveEmptyPrimaryConstructor", "PropertyName", "unused", "MemberVisibilityCanBePrivate", "UnstableApiUsage")
 package me.kgustave.gradle.pkg.json.plugin.conventions
 
-import me.kgustave.gradle.pkg.json.data.Person
-import me.kgustave.gradle.pkg.json.data.PkgJson
-import me.kgustave.gradle.pkg.json.data.Repository
+import me.kgustave.gradle.pkg.json.plugin.internal.data.*
 import org.gradle.api.Action
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.tasks.Internal
 import org.gradle.kotlin.dsl.newInstance
 import java.util.LinkedList
 import javax.inject.Inject
+import kotlin.collections.ArrayList
 
 open class PkgJsonConvention
 @Inject constructor(private val factory: ObjectFactory) {
@@ -76,31 +75,21 @@ open class PkgJsonConvention
 
     var description: String? = null
 
+    var homepage: String? = null
+
     var main: String? = null
 
-    var tags = emptyList<String>()
+    @Deprecated("replaced with keywords", ReplaceWith("keywords"))
+    var tags: List<String>
+        get() = keywords
+        set(value) { keywords = value }
+
+    var keywords = emptyList<String>()
         set(value) { field = value.distinct() }
 
-    //////////////////////
-    // REPOSITORY FIELD //
-    //////////////////////
-
-    val repository = factory.newInstance<RepositoryConvention>()
-
-    @get:Internal internal val _repository: Repository? get() = with(repository) {
-        if(!wasModified) return null
-        val type = requireNotNull(type) { "type must be specified!" }
-        val url = requireNotNull(url) { "url must be specified!" }
-        return Repository(type, url)
-    }
-
-    fun repository(action: Action<in RepositoryConvention>) {
-        action.execute(repository)
-    }
-
-    //////////////////
-    // AUTHOR FIELD //
-    //////////////////
+    ////////////
+    // AUTHOR //
+    ////////////
 
     /**
      * The author convention used to configure the `author`
@@ -111,11 +100,7 @@ open class PkgJsonConvention
     val author = factory.newInstance<PersonConvention>()
 
     @Internal internal var _author: Person? = null
-        get() = field ?: with(author) {
-            if (!wasModified) return null
-            val name = requireNotNull(name) { "Name must be modified!" }
-            return Person(name, email, url)
-        }
+        get() = field ?: author.buildPerson()
 
     fun author(action: Action<in PersonConvention>) {
         action.execute(author)
@@ -128,88 +113,39 @@ open class PkgJsonConvention
         _author = Person.string(author)
     }
 
-    ////////////////////////
-    // CONTRIBUTORS FIELD //
-    ////////////////////////
+    //////////////////
+    // CONTRIBUTORS //
+    //////////////////
 
-    var contributors: List<PersonConvention.() -> Unit>
-        get() = error("getting not supported")
-        set(value) {
-            _contributors = value.mapNotNull c@ { action ->
-                with(factory.newInstance<PersonConvention>()) {
-                    action(this)
-                    if(!wasModified) return@c null
-                    val name = requireNotNull(name) { "Name must be set!" }
-                    return@c Person(name, email, url)
-                }
-            }
-        }
+    var contributors: List<PersonConvention.() -> Unit> = emptyList()
 
-    @Internal internal var _contributors = emptyList<Person>()
+    @get:Internal internal val _contributors: List<Person>
+        get() = contributors.mapNotNull { factory.newInstance<PersonConvention>().apply(it).buildPerson() }
 
-    fun contributors(contributors: Collection<Action<in PersonConvention>>) {
-        this.contributors = contributors.map<Action<in PersonConvention>, PersonConvention.() -> Unit> { action -> { action.execute(this) } }
+    fun contributor(action: Action<in PersonConvention>) {
+        this.contributors += { action.execute(this) }
     }
 
-    ///////////////////////
-    // DEPENDENCY FIELDS //
-    ///////////////////////
+    fun contributors(actions: Collection<Action<in PersonConvention>>) {
+        val c = ArrayList<PersonConvention.() -> Unit>(actions.size)
+        for(action in actions) {
+            c += { action.execute(this) }
+        }
+        this.contributors += c
+    }
 
-    /**
-     * The `dependencies` property for a package.json
-     *
-     * The values of the map are serialized to the names of
-     * dependencies, where their values are the corresponding
-     * versions.
-     *
-     * For configuring development-only dependencies, use
-     * the [devDependencies] property.
-     *
-     * ### Example
-     *
-     * In build.gradle:
-     * ```groovy
-     * dependencies (
-     *   'chalk': '2.4.1'
-     * )
-     * ```
-     *
-     * Generated package.json:
-     * ```json
-     * "dependencies": {
-     *   "chalk": "2.4.1"
-     * }
-     * ```
-     */
-    var dependencies = emptyMap<String, String>()
+    //////////
+    // BUGS //
+    //////////
 
-    /**
-     * The `devDependencies` property for a package.json.
-     *
-     * This is configured in a similar manner to the
-     * [dependencies] property.
-     *
-     * ### Example
-     *
-     * In build.gradle:
-     * ```groovy
-     * devDependencies (
-     *   'mocha': '5.3.0'
-     * )
-     * ```
-     *
-     * The following will be produced in the package.json
-     * generated by the plugin:
-     *
-     * ```json
-     * "devDependencies": {
-     *   "mocha": "5.3.0"
-     * }
-     * ```
-     */
-    var devDependencies = emptyMap<String, String>()
+    val bugs = factory.newInstance<BugsConvention>()
 
-    var peerDependencies = emptyMap<String, String>()
+    @get:Internal internal val _bugs: Bugs?
+        get() = bugs.buildBugs()
+
+    fun bugs(action: Action<in BugsConvention>) {
+        action.execute(bugs)
+    }
 
     //////////////
     // LICENSES //
@@ -281,11 +217,165 @@ open class PkgJsonConvention
         get() = _licenses
         set(value) { _licenses = value.asSequence().distinct().toCollection(LinkedList()) }
 
+    /////////////////
+    // DIRECTORIES //
+    /////////////////
+
+    val directories = factory.newInstance<DirectoriesConvention>()
+
+    @get:Internal internal val _directories: Directories?
+        get() = directories.buildDirectories()
+
+    fun directories(action: Action<in DirectoriesConvention>) {
+        action.execute(directories)
+    }
+
+    ////////////////
+    // REPOSITORY //
+    ////////////////
+
+    val repository = factory.newInstance<RepositoryConvention>()
+
+    @get:Internal internal val _repository: Repository?
+        get() = repository.buildRepository()
+
+    fun repository(action: Action<in RepositoryConvention>) {
+        action.execute(repository)
+    }
+
+    //////////////////
+    // DEPENDENCIES //
+    //////////////////
+
+    /**
+     * The `dependencies` property for a package.json
+     *
+     * The values of the map are serialized to the names of
+     * dependencies, where their values are the corresponding
+     * versions.
+     *
+     * For configuring development-only dependencies, use
+     * the [devDependencies] property.
+     *
+     * ### Example
+     *
+     * In build.gradle:
+     * ```groovy
+     * dependencies (
+     *   'chalk': '2.4.1'
+     * )
+     * ```
+     *
+     * Generated package.json:
+     * ```json
+     * "dependencies": {
+     *   "chalk": "2.4.1"
+     * }
+     * ```
+     */
+    var dependencies = emptyMap<String, String>()
+
+    /**
+     * The `devDependencies` property for a package.json.
+     *
+     * This is configured in a similar manner to the
+     * [dependencies] property.
+     *
+     * ### Example
+     *
+     * In build.gradle:
+     * ```groovy
+     * devDependencies (
+     *   'mocha': '5.3.0'
+     * )
+     * ```
+     *
+     * The following will be produced in the package.json
+     * generated by the plugin:
+     *
+     * ```json
+     * "devDependencies": {
+     *   "mocha": "5.3.0"
+     * }
+     * ```
+     */
+    var devDependencies = emptyMap<String, String>()
+
+    var peerDependencies = emptyMap<String, String>()
+
+    var bundledDependencies = emptyMap<String, String>()
+
+    var optionalDependencies = emptyMap<String, String>()
+
+    fun dependencies(action: Action<in DependenciesConvention>) {
+        val convention = factory.newInstance<DependenciesConvention>()
+        action.execute(convention)
+        this.dependencies = convention.dependencies
+    }
+
+    fun devDependencies(action: Action<in DependenciesConvention>) {
+        val convention = factory.newInstance<DependenciesConvention>()
+        action.execute(convention)
+        this.devDependencies = convention.dependencies
+    }
+
+    fun peerDependencies(action: Action<in DependenciesConvention>) {
+        val convention = factory.newInstance<DependenciesConvention>()
+        action.execute(convention)
+        this.peerDependencies = convention.dependencies
+    }
+
+    fun bundledDependencies(action: Action<in DependenciesConvention>) {
+        val convention = factory.newInstance<DependenciesConvention>()
+        action.execute(convention)
+        this.bundledDependencies = convention.dependencies
+    }
+
+    fun optionalDependencies(action: Action<in DependenciesConvention>) {
+        val convention = factory.newInstance<DependenciesConvention>()
+        action.execute(convention)
+        this.optionalDependencies = convention.dependencies
+    }
+
     /////////////
     // SCRIPTS //
     /////////////
 
     var scripts = emptyMap<String, String>()
+
+    ///////////
+    // FILES //
+    ///////////
+
+    var files = emptyList<String>()
+
+    ////////
+    // OS //
+    ////////
+
+    var os = emptyList<String>()
+
+    /////////
+    // CPU //
+    /////////
+
+    var cpu = emptyList<String>()
+
+    /////////
+    // BIN //
+    /////////
+
+    var bin = emptyList<String>()
+
+    /////////
+    // MAN //
+    /////////
+
+    var man = emptyList<String>()
+
+    fun man(man: String) {
+        this.man = listOf(man)
+    }
 
     @Internal internal fun toPkgJson(): PkgJson {
         require(::name.isInitialized) { "package name is required" }
@@ -296,17 +386,27 @@ open class PkgJsonConvention
             version = version,
             private = private,
             description = description,
+            homepage = homepage,
             main = main,
+            keywords = keywords,
             author = _author,
             contributors = _contributors,
-            tags = tags,
+            bugs = _bugs,
             licenses = licenses,
             license = licenses.getOrNull(0),
-            scripts = scripts,
+            directories = _directories,
             repository = _repository,
             dependencies = dependencies,
             devDependencies = devDependencies,
-            peerDependencies = peerDependencies
+            peerDependencies = peerDependencies,
+            bundledDependencies = bundledDependencies,
+            optionalDependencies = optionalDependencies,
+            scripts = scripts,
+            files = files,
+            os = os,
+            cpu = cpu,
+            bin = bin,
+            man = man
         )
     }
 

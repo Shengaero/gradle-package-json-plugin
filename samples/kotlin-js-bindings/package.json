@@ -4,27 +4,25 @@
   "private": true,
   "description": "Kotlin bindings for the birb npm package",
   "main": "build/kotlin-js-min/main/birb-kt.js",
+  "keywords": [
+    "kotlin2js",
+    "birb"
+  ],
   "author": {
     "name": "Kaidan Gustave",
     "email": "kaidangustave@yahoo.com",
     "url": "kgustave@yahoo.com"
   },
-  "tags": [
-    "kotlin2js",
-    "birb"
-  ],
   "license": "Apache-2.0",
-  "scripts": {
-    "test": "mocha build/kotlin-js-min/test/birb-kt_test.js"
-  },
   "devDependencies": {
-    "birb": "^1.2.1",
-    "kotlin": "^1.3.10",
-    "kotlin-test": "^1.3.10",
-    "mocha": "^5.2.0"
+    "mocha": "5.2.0",
+    "kotlin-test": "1.3.10"
   },
   "peerDependencies": {
-    "birb": "1.2.1",
+    "bird": "1.2.1",
     "kotlin": "1.3.10"
+  },
+  "scripts": {
+    "test": "mocha build/kotlin-js-min/test/birb-kt_test.js"
   }
 }

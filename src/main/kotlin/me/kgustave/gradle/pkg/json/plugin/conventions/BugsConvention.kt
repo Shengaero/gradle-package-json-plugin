@@ -16,29 +16,28 @@
 @file:Suppress("MemberVisibilityCanBePrivate")
 package me.kgustave.gradle.pkg.json.plugin.conventions
 
-import me.kgustave.gradle.pkg.json.plugin.internal.data.Repository
+import me.kgustave.gradle.pkg.json.plugin.internal.data.Bugs
 import org.gradle.api.tasks.Internal
 
-open class RepositoryConvention {
+open class BugsConvention {
     @get:Internal internal var wasModified = false
         private set
 
     var url: String? = null
         set(value) {
-            field = requireNotNull(value) { "cannot set url to null" }
+            field = value
             wasModified = true
         }
 
-    var type: String? = null
+    var email: String? = null
         set(value) {
-            field = requireNotNull(value) { "cannot set type to null" }
+            field = value
             wasModified = true
         }
 
-    @Internal internal fun buildRepository(): Repository? {
+    @Internal internal fun buildBugs(): Bugs? {
         if(!wasModified) return null
-        val type = requireNotNull(type) { "type must be specified!" }
-        val url = requireNotNull(url) { "url must be specified!" }
-        return Repository(type, url)
+        val url = requireNotNull(url) { "Url must be specified!" }
+        return Bugs(url, email)
     }
 }

@@ -15,8 +15,8 @@
  */
 package me.kgustave.gradle.pkg.json.tests.plugin
 
-import kotlinx.serialization.json.JSON
-import me.kgustave.gradle.pkg.json.internal.PkgJsonSerializer
+import kotlinx.serialization.json.JsonTreeParser
+import kotlinx.serialization.json.content
 import me.kgustave.gradle.pkg.json.plugin.PkgJsonPlugin
 import me.kgustave.gradle.pkg.json.plugin.PkgJsonTask
 import me.kgustave.gradle.pkg.json.utils.PluginTests
@@ -32,13 +32,6 @@ import kotlin.test.assertTrue
 @PluginTests
 @EnableRuleMigrationSupport
 class PkgJsonPluginKtsTests: AbstractProjectTests(buildScriptName = "build.gradle.kts") {
-    private val json = JSON(
-        indent = "  ",
-        indented = true,
-        strictMode = true,
-        encodeDefaults = false
-    )
-
     @Test fun `test plugin applies (kts)`() {
         with(project) {
             plugins.apply(PkgJsonPlugin.ID)
@@ -55,11 +48,9 @@ class PkgJsonPluginKtsTests: AbstractProjectTests(buildScriptName = "build.gradl
                 id("${PkgJsonPlugin.ID}")
             }
 
-            tasks.withType<PkgJsonTask> {
-                pkg {
-                    name = "test-project"
-                    version = "1.0"
-                }
+            pkg {
+                name = "test-project"
+                version = "1.0"
             }
         """)
 
@@ -81,11 +72,9 @@ class PkgJsonPluginKtsTests: AbstractProjectTests(buildScriptName = "build.gradl
                 id("${PkgJsonPlugin.ID}")
             }
 
-            tasks.withType<PkgJsonTask> {
-                pkg {
-                    name = "test-project"
-                    version = "1.0"
-                }
+            pkg {
+                name = "test-project"
+                version = "1.0"
             }
         """)
 
@@ -106,11 +95,9 @@ class PkgJsonPluginKtsTests: AbstractProjectTests(buildScriptName = "build.gradl
                 id("${PkgJsonPlugin.ID}")
             }
 
-            tasks.withType<PkgJsonTask> {
-                pkg {
-                    name = "te-st-proj-ect"
-                    version = "1.0.2"
-                }
+            pkg {
+                name = "te-st-proj-ect"
+                version = "1.0.2"
             }
         """)
 
@@ -120,9 +107,9 @@ class PkgJsonPluginKtsTests: AbstractProjectTests(buildScriptName = "build.gradl
             usePluginClasspath = true
         )
 
-        val pkgJson = json.parse(PkgJsonSerializer, file("package.json").readText())
-        assertEquals("te-st-proj-ect", pkgJson.name)
-        assertEquals("1.0.2", pkgJson.version)
+        val pkgJson = JsonTreeParser.parse(file("package.json").readText())
+        assertEquals("te-st-proj-ect", pkgJson["name"].content)
+        assertEquals("1.0.2", pkgJson["version"].content)
     }
 
     @Test fun `test plugin task adds dependencies to file (kts)`() {
@@ -133,12 +120,13 @@ class PkgJsonPluginKtsTests: AbstractProjectTests(buildScriptName = "build.gradl
                 id("${PkgJsonPlugin.ID}")
             }
 
-            tasks.withType<PkgJsonTask> {
-                pkg {
-                    name = "test-project"
-                    version = "1.0"
-                    dependencies = mapOf("chalk" to "2.4.1")
-                }
+            pkg {
+                name = "test-project"
+                version = "1.0"
+            }
+
+            dependencies {
+                dependency("chalk:2.4.1")
             }
         """)
 
@@ -148,9 +136,9 @@ class PkgJsonPluginKtsTests: AbstractProjectTests(buildScriptName = "build.gradl
             usePluginClasspath = true
         )
 
-        val pkgJson = json.parse(PkgJsonSerializer, file("package.json").readText())
-        assertTrue("chalk" in pkgJson.dependencies)
-        assertEquals("2.4.1", pkgJson.dependencies["chalk"])
+        val pkgJson = JsonTreeParser.parse(file("package.json").readText())
+        assertTrue("chalk" in pkgJson["dependencies"].jsonObject)
+        assertEquals("2.4.1", pkgJson["dependencies"].jsonObject["chalk"].content)
     }
 
     @Test fun `test plugin task adds devDependencies to file (kts)`() {
@@ -161,12 +149,13 @@ class PkgJsonPluginKtsTests: AbstractProjectTests(buildScriptName = "build.gradl
                 id("${PkgJsonPlugin.ID}")
             }
 
-            tasks.withType<PkgJsonTask> {
-                pkg {
-                    name = "test-project"
-                    version = "1.0"
-                    devDependencies = mapOf("mocha" to "5.2.0")
-                }
+            pkg {
+                name = "test-project"
+                version = "1.0"
+            }
+
+            dependencies {
+                devDependency("mocha:5.2.0")
             }
         """)
 
@@ -176,8 +165,8 @@ class PkgJsonPluginKtsTests: AbstractProjectTests(buildScriptName = "build.gradl
             usePluginClasspath = true
         )
 
-        val pkgJson = json.parse(PkgJsonSerializer, file("package.json").readText())
-        assertTrue("mocha" in pkgJson.devDependencies)
-        assertEquals("5.2.0", pkgJson.devDependencies["mocha"])
+        val pkgJson = JsonTreeParser.parse(file("package.json").readText())
+        assertTrue("mocha" in pkgJson["devDependencies"].jsonObject)
+        assertEquals("5.2.0", pkgJson["devDependencies"].jsonObject["mocha"].content)
     }
 }

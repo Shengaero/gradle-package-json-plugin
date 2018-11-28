@@ -13,9 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package me.kgustave.gradle.pkg.json.data
+package me.kgustave.gradle.pkg.json.plugin.internal.data
 
-import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonElement
+import me.kgustave.gradle.pkg.json.plugin.internal.stringify
 
-@Serializable
-data class Repository(val type: String, val url: String)
+internal interface JsonAdapter<J: JsonElement> {
+    fun toJson(): J
+    fun toJsonString(indent: Int = 0): String = toJson().stringify(indent)
+}
