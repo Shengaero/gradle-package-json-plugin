@@ -13,13 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-@file:Suppress("RemoveEmptyPrimaryConstructor", "PropertyName", "unused", "MemberVisibilityCanBePrivate", "UnstableApiUsage")
+@file:Suppress("PropertyName", "unused", "MemberVisibilityCanBePrivate", "UnstableApiUsage")
 package me.kgustave.gradle.pkg.json.plugin.conventions
 
+import kotlinx.serialization.json.JsonElement
 import me.kgustave.gradle.pkg.json.plugin.internal.data.*
+import me.kgustave.gradle.pkg.json.plugin.internal.jsonElementOf
 import org.gradle.api.Action
 import org.gradle.api.model.ObjectFactory
+import org.gradle.api.plugins.ExtensionAware
 import org.gradle.api.tasks.Internal
+import org.gradle.kotlin.dsl.extra
 import org.gradle.kotlin.dsl.newInstance
 import java.util.LinkedList
 import javax.inject.Inject
@@ -78,11 +82,6 @@ open class PkgJsonConvention
     var homepage: String? = null
 
     var main: String? = null
-
-    @Deprecated("replaced with keywords", ReplaceWith("keywords"))
-    var tags: List<String>
-        get() = keywords
-        set(value) { keywords = value }
 
     var keywords = emptyList<String>()
         set(value) { field = value.distinct() }
@@ -406,8 +405,14 @@ open class PkgJsonConvention
             os = os,
             cpu = cpu,
             bin = bin,
-            man = man
+            man = man,
+            extra = extraProperties()
         )
+    }
+
+    private fun extraProperties(): Map<String, JsonElement> {
+        if(this !is ExtensionAware) return emptyMap()
+        return extra.properties.mapValues { jsonElementOf(it.value) }
     }
 
     internal companion object {

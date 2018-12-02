@@ -49,7 +49,7 @@ open class PkgJsonCacheConvention @Inject constructor() {
      */
     @Incubating
     @field:[Optional Input]
-    var outputDirectory: String = ".gradle/package-json-cache"
+    var outputDirectory: String = DEFAULT_OUTPUT_DIR
 
     /**
      * Name of the file in created in [outputDirectory] where package.json
@@ -65,6 +65,7 @@ open class PkgJsonCacheConvention @Inject constructor() {
     var outputName: String = "package.json.cache"
 
     internal companion object {
+        @Internal internal const val DEFAULT_OUTPUT_DIR = ".gradle/package-json-cache"
         @Internal internal const val NAME = "cache"
     }
 }

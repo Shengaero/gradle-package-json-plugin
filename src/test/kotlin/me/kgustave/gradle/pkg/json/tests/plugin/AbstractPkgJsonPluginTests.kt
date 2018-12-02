@@ -27,7 +27,7 @@ import java.io.File
 
 @PluginTests
 @EnableRuleMigrationSupport
-abstract class AbstractProjectTests(
+abstract class AbstractPkgJsonPluginTests(
     protected val buildScriptName: String,
     protected val projectName: String = "test-project"
 ) {
@@ -42,7 +42,7 @@ abstract class AbstractProjectTests(
             .build()
     }
 
-    protected fun gradleBuildScript(script: String): File =
+    protected open fun gradleBuildScript(script: String): File =
         testProjectDir.newFile(buildScriptName).apply {
             writeText(script.trimIndent())
         }

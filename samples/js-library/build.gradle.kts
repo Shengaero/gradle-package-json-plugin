@@ -60,7 +60,7 @@ fun Map<String, String>.dependencyArray(): Array<String> = map { "${it.key}@${it
 
 tasks.named<PkgJsonTask>("packageJson") {
   group = "node"
-  autoUpdateFile = true
+  //autoUpdateFile = true
 }
 
 task<NpmTask>("installDependencies") {

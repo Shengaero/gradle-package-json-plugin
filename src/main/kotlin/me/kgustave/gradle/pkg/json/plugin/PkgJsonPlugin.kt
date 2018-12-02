@@ -35,9 +35,17 @@ class PkgJsonPlugin: Plugin<Project> {
     private lateinit var task: PkgJsonTask
 
     override fun apply(target: Project) = with(target) {
+        init()
+        dependencyConfigurations()
+        autoGeneration()
+    }
+
+    private fun Project.init() {
         pkg = extensions.create(PkgJsonConvention.NAME, objects)
         task = task<PkgJsonTask>(PkgJsonTask.DEFAULT_NAME)
+    }
 
+    private fun Project.dependencyConfigurations() {
         val dependency = configurations.create(DEPENDENCY_CONFIGURATION)
         val devDependency = configurations.create(DEV_DEPENDENCY_CONFIGURATION)
         val peerDependency = configurations.create(PEER_DEPENDENCY_CONFIGURATION)
@@ -45,13 +53,15 @@ class PkgJsonPlugin: Plugin<Project> {
         val optionalDependency = configurations.create(OPTIONAL_DEPENDENCY_CONFIGURATION)
 
         afterEvaluate {
-            pkg.dependencies += dependency.dependencies.map { d -> d.rearrange() }
-            pkg.devDependencies += devDependency.dependencies.map { d -> d.rearrange() }
-            pkg.peerDependencies += peerDependency.dependencies.map { d -> d.rearrange() }
-            pkg.bundledDependencies += bundledDependency.dependencies.map { d -> d.rearrange() }
-            pkg.optionalDependencies += optionalDependency.dependencies.map { d -> d.rearrange() }
+            pkg.dependencies += dependency.dependencies.map { d -> d.processNotation() }
+            pkg.devDependencies += devDependency.dependencies.map { d -> d.processNotation() }
+            pkg.peerDependencies += peerDependency.dependencies.map { d -> d.processNotation() }
+            pkg.bundledDependencies += bundledDependency.dependencies.map { d -> d.processNotation() }
+            pkg.optionalDependencies += optionalDependency.dependencies.map { d -> d.processNotation() }
         }
+    }
 
+    private fun Project.autoGeneration() {
         afterEvaluate {
             if(task.autoUpdateFile) {
                 task.generate()
@@ -59,21 +69,18 @@ class PkgJsonPlugin: Plugin<Project> {
         }
     }
 
-    private fun Dependency.destroy(): Triple<String?, String, String?> = Triple(group, name, version)
+    private fun Dependency.processNotation(): Pair<String, String> {
+        val (baseGroup, baseName, baseVersion) = Triple(group, name, version)
 
-    private fun Dependency.rearrange(): Pair<String, String> {
-        val (baseGroup, baseName, baseVersion) = destroy()
-
-        @Suppress("LiftReturnOrAssignment")
         if(baseGroup != null && baseGroup.startsWith("@")) {
             requireNotNull(baseVersion) { "Version must be specified for dependency: $baseGroup/$baseName" }
             return "$baseGroup/$baseName" to baseVersion
-        } else {
-            val name = baseGroup ?: baseName
-            val version = baseVersion ?: baseName
-            require(name != version) { "Version must be specified for dependency: $name" }
-            return name to version
         }
+
+        val name = baseGroup ?: baseName
+        val version = baseVersion ?: baseName
+        require(name != version) { "Version must be specified for dependency: $name" }
+        return name to version
     }
 
     internal companion object {

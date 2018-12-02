@@ -24,7 +24,7 @@ inline fun runner(block: GradleRunner.() -> Unit): BuildResult {
     return GradleRunner.create().apply(block).build()
 }
 
-fun runGradleTask(task: String, projectDir: File, usePluginClasspath: Boolean = true): BuildTask? {
+fun gradleRunTask(task: String, projectDir: File, usePluginClasspath: Boolean = true): BuildTask? {
     return runner {
         withProjectDir(projectDir)
         withArguments(task)
