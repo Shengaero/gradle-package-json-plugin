@@ -23,6 +23,8 @@ open class PkgJsonFormattingConvention {
     var indentFactor = 2
         set(value) { field = max(0, value) }
 
+    var finalNewline = true
+
     var shouldIndent: Boolean
         get() = indentFactor > 0
         set(value) {

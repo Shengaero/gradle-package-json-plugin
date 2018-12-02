@@ -162,7 +162,10 @@ open class PkgJsonTask: DefaultTask() {
         logger.debug("Text conversion complete:\n$text")
         logger.debug("Writing to package.json file...")
 
-        packageJsonFile.writeText(text = text, charset = Charsets.UTF_8)
+        packageJsonFile.writeText(
+            text = "$text${if(formatting.finalNewline) "\n" else ""}",
+            charset = Charsets.UTF_8
+        )
 
         logger.debug("Successfully wrote to package.json file!")
     }
