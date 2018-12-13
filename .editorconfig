@@ -16,19 +16,25 @@ trim_trailing_whitespace = false
 insert_final_newline = false
 end_of_line = lf
 
-[**.{java, kt, kts, gradle, js}]
+[**.{java, kt}]
 trim_trailing_whitespace = true
 insert_final_newline = true
 end_of_line = lf
 indent_size = 4
 
 [**.{gradle.kts, js}]
+trim_trailing_whitespace = true
+insert_final_newline = true
+end_of_line = lf
 indent_size = 2
 
 [*.md]
 indent_size = 2
 insert_final_newline = false
 trim_trailing_whitespace = true
+
+[gradlew]
+end_of_line = lf
 
 [gradlew.bat]
 end_of_line = crlf

@@ -237,6 +237,10 @@ tasks {
     task.dependsOn(build)
     task.mustRunAfter(build)
   }
+
+  "wrapper"(Wrapper::class) {
+    gradleVersion = "5.0"
+  }
 }
 
 bintray {
