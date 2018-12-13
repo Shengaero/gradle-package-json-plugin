@@ -17,7 +17,7 @@ const {assert} = require('chai');
 const {arrayOf, println} = require('../src/kotlin-like');
 
 describe('println tests', () => {
-  it('should print to console', function () {
+  it('should print to console', () => {
     println('Hello, World!');
   });
 });
