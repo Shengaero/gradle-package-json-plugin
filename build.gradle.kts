@@ -248,10 +248,10 @@ bintray {
     Properties().runCatching { apply { load(reader) } }.onSuccess { properties ->
       user = "${properties["bintray.user.name"]}"
       key = "${properties["bintray.api.key"]}"
+      publish = "${properties["bintray.publish"]}".toBoolean()
     }
-  }?.close()
+  }?.close() ?: run { publish = false }
 
-  publish = false
   setPublications("PluginPublish")
 
   with(pkg) {
