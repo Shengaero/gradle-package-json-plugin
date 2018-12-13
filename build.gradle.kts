@@ -258,7 +258,9 @@ bintray {
     name = rootProject.name
     repo = "maven"
     vcsUrl = "https://github.com/Shengaero/gradle-package-json-plugin.git"
-    githubRepo = "https://github.com/Shengaero/gradle-package-json-plugin/"
+    
+    githubRepo = "Shengaero/gradle-package-json-plugin"
+    githubReleaseNotesFile = "README.md"
 
     setLicenses("Apache-2.0")
 
